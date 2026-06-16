@@ -20,7 +20,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. AWS 권한 인증 (GitHub Secrets의 2종 키 사용)
+      # 2. AWS 권한 인증
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -33,26 +33,26 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      # 4. Docker 이미지 빌드 및 AWS ECR로 업로드 (✨ 깃 커밋 해시 태그와 latest 태그 동시 생성)
+      # 4. Docker 이미지 빌드 및 AWS ECR로 업로드 (오타 수정 완료)
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          # 고유 태그(IMAGE_TAG)와 최신 태그(latest)를 둘 다 붙여서 빌드합니다.
+          # 고유 태그(IMAGE_TAG)와 최신 태그(latest)를 둘 다 붙여서 빌드
           docker build \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
           
-          # 생성된 두 태그의 이미지를 모두 ECR에 푸시합니다.
+          # 생성된 두 태그의 이미지를 모두 ECR에 푸시
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
         working-directory: ./backend
 
-      # 5. ECS 서비스 강제 업데이트 (ECR에 올라간 최신 latest 이미지를 땡겨와서 재구동)
+      # 5. ECS 서비스 강제 업데이트
       - name: Deploy to Amazon ECS Service
         run: |
           aws ecs update-service \
