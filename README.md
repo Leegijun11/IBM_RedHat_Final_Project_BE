@@ -12,16 +12,21 @@ class Alarm_Crud:
 비동기 방식으로 사용
 async def 
 
+db에서 scheme와 crud,  노션 api 확인하면서 진행
 
+"""
+기은
 users
 parents
 alarms
 tips
+"""
 
-
+"""
+종훈
 babies
 babycharacters
 records
 diaries
-
+"""
 
