@@ -38,7 +38,7 @@ class User_Public(User_Base):
     u_nickname : str
     
     
-class User_Read(User_Public):
+class User_Read(User_Base):
     u_id: int
     signup_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
