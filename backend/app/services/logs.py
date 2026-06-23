@@ -27,7 +27,11 @@ class Log_Service:
             await db.commit()
             await db.refresh(data)
             return data
-
+        
+        except HTTPException:
+            await db.rollback()
+            raise
+        
         except Exception as e:
             await db.rollback()
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

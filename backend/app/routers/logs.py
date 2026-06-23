@@ -20,7 +20,7 @@ async def router_logs_add(log : Log_Create,
 
 
 # GET 기록 상세
-@router.get('/detail', response_model=Log_Read)
+@router.get('/detail', response_model=Log_Read | None)
 async def router_logs_detail(l_id: int, 
                              db : AsyncSession=Depends(get_db)):
     return await Log_Service.services_logs_detail(db, l_id)

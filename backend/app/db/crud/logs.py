@@ -12,13 +12,14 @@ class Log_Crud:
     async def crud_logs_create(db:AsyncSession,
                                log: Log_Create) -> Log:          
         data = log.model_dump()
-        db_data=log(**data)
+        db_data=Log(**data)
         db.add(db_data)
         await db.flush()
         return db_data
 
 
     # 오늘 기록 확인
+    @staticmethod
     async def crud_logs_detail(db: AsyncSession,
                                l_id: int) -> Log:        
         result = await db.execute(select(Log).where(Log.l_id == l_id))
@@ -26,6 +27,7 @@ class Log_Crud:
     
 
     # 오늘 기록 여부 확인
+    @staticmethod
     async def crud_logs_find_date_b_id(db: AsyncSession,
                                        b_id: int) -> Log | None:
         query=(select(Log)
