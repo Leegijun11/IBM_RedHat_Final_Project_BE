@@ -16,6 +16,7 @@ class Diary(Base):
     d_content: Mapped[str] = mapped_column(String(255), nullable=False)
     d_label: Mapped[str] = mapped_column(String(100),nullable=False)
     d_date: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now())
+    d_image: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     
     d_eat: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     d_sleep: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
