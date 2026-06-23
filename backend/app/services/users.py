@@ -41,13 +41,14 @@ class User_Service:
             await db.refresh(new_user)
             
             return {
+                "u_id":new_user.u_id,
                 "u_account": new_user.u_account,
                 "u_pw": new_user.u_pw,
                 "u_name": new_user.u_name,
                 "u_nickname": new_user.u_nickname,
                 "u_email": new_user.u_email,
                 "u_phone": new_user.u_phone,
-                "u_created_at": new_user.signup_date
+                "u_created_at": new_user.u_created_at
             }
         except HTTPException:
             raise
@@ -123,17 +124,8 @@ class User_Service:
             if not user:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="유저 정보 확인 실패")
             
-            return{
-                "user":{
-                    "u_id":user.u_id,
-                    "u_account":user.u_account,
-                    "u_name":user.u_name,
-                    "u_nickname":user.u_nickname,
-                    "u_email":user.u_email,
-                    "u_phone":user.u_phone,
-                    "u_created_at":user.signup_date
-                }
-            }
+            return user
+        
         except HTTPException:
             raise
 
@@ -154,7 +146,7 @@ class User_Service:
             return{
                     "u_account":user.u_account,
                     "u_nickname":user.u_nickname,
-                    "u_created_at":user.signup_date
+                    "u_created_at":user.u_created_at
                 }
         except HTTPException:
             raise

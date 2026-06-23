@@ -4,6 +4,7 @@ from app.routers import babyimages
 from app.db.database import async_engine, Base
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.routers import users
 
 from app.db.models.alarms import Alarm
 from app.db.models.babies import Baby
@@ -26,6 +27,7 @@ app = FastAPI(title="Backend API", lifespan=lifespan)
 # app.include_router(health.router)
 # app.include_router(items.router)
 app.include_router(babyimages.router)
+app.include_router(users.router)
 
 app.add_middleware(
     CORSMiddleware,

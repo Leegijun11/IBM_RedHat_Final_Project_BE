@@ -17,7 +17,7 @@ from app.core.jwt_handle import verify_token
 from app.core.auth import set_auth_cookies, auth_get_u_id
 from app.db.scheme.users import User_Read,User_Login,User_Base,User_Public,User_Create,User_Update
 from app.services.users import User_Service
-from backend.app.db.database import get_db
+from app.db.database import get_db
 
 
 router=APIRouter(prefix="/users",tags=["Users"])
@@ -48,26 +48,18 @@ async def router_users_logout(response:Response,u_id: int=Depends(auth_get_u_id)
 #현재 유저 정보
 @router.get('/me', response_model=User_Read)
 async def router_users_me(u_id:int=Depends(auth_get_u_id), db:AsyncSession=Depends(get_db)):
-    user_data=await User_Service.service_users_get_u_id(db, u_id)
+    user_data=await User_Service.service_users_me(db, u_id)
     return user_data
 
 
-#다른 유저 정보
-@router.get('/{u_id}',response_model=User_Public)
-async def router_users_get_u_id(u_id:int, db:AsyncSession=Depends(get_db)):
-    other_user_data=await User_Service.service_users_get_u_id(db, u_id)
-    return other_user_data
-
-
 #아이디 찾기
-@router.get('/find_account',response_model=str)
+@router.get('/find_account',response_model=User_Read)
 async def router_users_find_account(u_name:str, u_email:EmailStr,u_phone:str, db:AsyncSession=Depends(get_db)):
     return await User_Service.service_users_find_account(db, u_name, u_email,u_phone)
 
-
 #유저 정보 수정
-@router.put('/edit', response_model=User_Read)
-async def router_users_update(user_update:User_Update, u_id:int=Depends(get_db), db:AsyncSession=Depends(get_db)):
+@router.put('/edit', response_model=dict)
+async def router_users_update(user_update:User_Update, u_id:int=Depends(auth_get_u_id), db: AsyncSession = Depends(get_db)):
     return await User_Service.service_users_update(db, u_id, user_update)
 
 
@@ -76,3 +68,12 @@ async def router_users_update(user_update:User_Update, u_id:int=Depends(get_db),
 async def router_users_delete(response:Response, u_id:int=Depends(auth_get_u_id), db:AsyncSession=Depends(get_db)):
     return await User_Service.service_users_delete(db, u_id)
     #쿠키 삭제(보류)
+
+
+
+#다른 유저 정보
+@router.get('/{u_id}',response_model=User_Public)
+async def router_users_get_u_id(u_id:int, db:AsyncSession=Depends(get_db)):
+    other_user_data=await User_Service.service_users_get_u_id(db, u_id)
+    return other_user_data
+
