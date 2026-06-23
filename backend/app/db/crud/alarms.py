@@ -20,7 +20,7 @@ class Alarm_Crud:
     @staticmethod
     async def crud_alarms_list(db:AsyncSession,
                                receive_id:int) -> list[Alarm] | None:
-        result = await db.execute(select()
+        result = await db.execute(select(Alarm)
                                   .where(Alarm.receive_id == receive_id))
         return list(result.scalars().all())
 

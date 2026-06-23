@@ -21,7 +21,7 @@ class Diary_Crud:
     @staticmethod
     async def crud_diaries_list(db:AsyncSession,
                                 d_date:datetime) -> list[Diary] | None:
-        result = await db.execute(select()
+        result = await db.execute(select(Diary)
                                   .where(func.date(Diary.d_date) == func.date(d_date)))
         return list(result.scalars().all())
 
