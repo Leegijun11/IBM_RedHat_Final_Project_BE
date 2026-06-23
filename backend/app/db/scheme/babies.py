@@ -35,7 +35,7 @@ class Baby_Public(Baby_Base):
     b_gender : str
     
     
-class Baby_Read(Baby_Public):
+class Baby_Read(Baby_Base):
     b_id: int
     b_created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
