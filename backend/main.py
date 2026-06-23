@@ -23,10 +23,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Backend API", lifespan=lifespan)
 
-# app.include_router(health.router)
-# app.include_router(items.router)
-app.include_router(babyimages.router)
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  
@@ -34,3 +30,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/")
+async def root():
+    return {"message": "home"}
+
+# app.include_router(health.router)
+# app.include_router(items.router)
+app.include_router(babyimages.router)
