@@ -30,3 +30,5 @@ records
 diaries
 """
 
+확인사항
+env 파일 다시 다운
