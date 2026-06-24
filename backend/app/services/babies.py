@@ -7,26 +7,21 @@ from app.db.crud.records import Record_Crud
 from app.db.scheme.records import Record_Create
 from datetime import datetime
 from fastapi import HTTPException
+from argparse import Namespace
 
 class BabyService:
 
     # 1. 아이 정보 등록
     @staticmethod
-    async def service_babies_create(u_id:int, baby:Baby_Create, db:AsyncSession):
+    async def service_babies_create(u_id: int, baby: Baby_Create, db: AsyncSession):
         if baby.b_height <= 0 or baby.b_weight <= 0:
-            raise HTTPException(status_code=400, detail="아이 정보 등록에 실패했습니다.")
+            raise HTTPException(status_code=400, detail="키와 몸무게는 0보다 커야 합니다.")
         try:
             new_group = CareGroup_Create(creator_id=u_id) 
-            care_group = await CareGroup_Crud.crud_caregroups_create(db, new_group)
-            
-            await db.flush()
-
-            generated_g_id = care_group.g_id  
-            if generated_g_id is None:
-                raise ValueError("그룹 ID(g_id) 발급에 실패했습니다.")
+            care_group = await CareGroup_Crud.crud_caregroups_create(db, new_group) 
             
             baby_dict = baby.model_dump()
-            baby_dict["g_id"] = generated_g_id  
+            baby_dict["g_id"] = care_group.g_id  
             
             db_baby = await Baby_Crud.crud_babies_create(db, baby_dict) 
 
@@ -37,19 +32,19 @@ class BabyService:
             
         except Exception as e:
             await db.rollback()  
-            print(f"BABY CREATE ERROR TRACE: {str(e)}")
-            raise HTTPException(status_code=400, detail="아이 정보 등록에 실패했습니다. (원인: {type(e).__name__})")
+            raise HTTPException(status_code=400, detail=f"{e}아이 정보 등록에 실패했습니다.")
 
     # 2. 아이 목록 조회
     @staticmethod
-    async def service_babies_list(g_id:int, db:AsyncSession):
+    async def service_babies_list(u_id:int, db:AsyncSession):
         try:
-            db_data=await Baby_Crud.crud_babies_list(g_id, db)
-            if db_data is None:
-                raise HTTPException(status_code=400, detail="아이들의 정보를 불러오는데 실패했습니다.")
-            return db_data
+            db_data=await Baby_Crud.crud_babies_list(u_id, db)
         except Exception as e:
-            raise HTTPException(status_code=400, detail="아이들의 정보를 불러오는데 실패했습니다.")
+            raise HTTPException(status_code=400, detail="{e} 아이들의 정보를 불러오는 중 서버 오류가 발생했습니다.")
+        if db_data is None:
+            raise HTTPException(status_code=404, detail="아이들의 정보를 찾을 수 없습니다.")
+        return db_data
+        
 
         
     # 3. 아이 세부 정보
