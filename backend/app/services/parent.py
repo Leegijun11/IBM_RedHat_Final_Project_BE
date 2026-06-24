@@ -64,7 +64,7 @@ class Parent_Service:
             return [
                 {
                     "u_name": user_name_map.get(member.u_id),
-                    "p_roll": member.p_role,
+                    "p_role": member.p_role,
                     "p_category": member.p_category,
                     "p_state": member.p_state
                 }
