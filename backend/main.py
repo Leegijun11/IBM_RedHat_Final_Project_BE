@@ -38,3 +38,7 @@ async def root():
 # app.include_router(health.router)
 # app.include_router(items.router)
 app.include_router(babyimages.router)
+
+
+
+#uvicorn main:app --reload
