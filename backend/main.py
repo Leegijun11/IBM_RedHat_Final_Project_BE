@@ -3,14 +3,13 @@ from contextlib import asynccontextmanager
 from app.db.database import async_engine, Base
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import babyimages, users, tips, logs
+from app.routers import babyimages, users, tips, logs, parent
 
 from app.db.models.alarms import Alarm
 from app.db.models.babies import Baby
 from app.db.models.babycharacters import BabyCharacter
 from app.db.models.care_group import Care_Group
 from app.db.models.diaries import Diary
-from app.db.models.parents import Parent
 from app.db.models.records import Record
 
 
@@ -25,9 +24,16 @@ app = FastAPI(title="Backend API", lifespan=lifespan)
 
 # app.include_router(health.router)
 # app.include_router(items.router)
-app.include_router(babyimages.router)
+
+@app.get("/")
+async def root():
+    return {"message": "home"}
+
+
 app.include_router(users.router)
+app.include_router(parent.router)
 app.include_router(tips.router)
+app.include_router(babyimages.router)
 app.include_router(logs.router)
 
 app.add_middleware(
@@ -38,8 +44,5 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
-async def root():
-    return {"message": "home"}
 
 #uvicorn main:app --reload
