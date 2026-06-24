@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from app.db.database import async_engine, Base
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import babyimages, users, tips
+from app.routers import babyimages, users, tips, parent, alarm
 
 from app.db.models.alarms import Alarm
 from app.db.models.babies import Baby
@@ -30,6 +30,8 @@ app = FastAPI(title="Backend API", lifespan=lifespan)
 app.include_router(babyimages.router)
 app.include_router(users.router)
 app.include_router(tips.router)
+app.include_router(parent.router)
+app.include_router(alarm.router)
 
 app.add_middleware(
     CORSMiddleware,
