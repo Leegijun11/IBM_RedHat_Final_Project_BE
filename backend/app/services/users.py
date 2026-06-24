@@ -48,7 +48,8 @@ class User_Service:
                 "u_nickname": new_user.u_nickname,
                 "u_email": new_user.u_email,
                 "u_phone": new_user.u_phone,
-                "u_created_at": new_user.u_created_at
+                "u_created_at": new_user.u_created_at,
+                "u_address": new_user.u_address
             }
         except HTTPException:
             raise

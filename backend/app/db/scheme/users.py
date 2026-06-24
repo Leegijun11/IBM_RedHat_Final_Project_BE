@@ -43,6 +43,7 @@ class User_Read(User_Base):
     u_id: int
     u_name: str
     u_nickname : str
+    u_address: str
     u_created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class User_Public(BaseModel):

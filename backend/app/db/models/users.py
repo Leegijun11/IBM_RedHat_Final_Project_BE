@@ -20,7 +20,7 @@ class User(Base):
     u_nickname: Mapped[str] = mapped_column(String(100), nullable=False)
     u_email: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
     u_phone: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
-    u_address: Mapped[str] = mapped_column(String(255), nullable=True)
+    u_address: Mapped[str] = mapped_column(String(255), nullable=False)
     u_created_at: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now())
     u_image: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     
