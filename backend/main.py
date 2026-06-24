@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from app.routers import babyimages
 from app.db.database import async_engine, Base
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.routers import babyimages, users, tips
 
 from app.db.models.alarms import Alarm
 from app.db.models.babies import Baby
@@ -13,6 +13,8 @@ from app.db.models.diaries import Diary
 from app.db.models.parents import Parent
 from app.db.models.records import Record
 from app.db.models.users import User
+from app.db.models.tips import Tip
+from app.db.models.logs import Log
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -22,6 +24,12 @@ async def lifespan(app: FastAPI):
     await async_engine.dispose()
 
 app = FastAPI(title="Backend API", lifespan=lifespan)
+
+# app.include_router(health.router)
+# app.include_router(items.router)
+app.include_router(babyimages.router)
+app.include_router(users.router)
+app.include_router(tips.router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -34,11 +42,5 @@ app.add_middleware(
 @app.get("/")
 async def root():
     return {"message": "home"}
-
-# app.include_router(health.router)
-# app.include_router(items.router)
-app.include_router(babyimages.router)
-
-
 
 #uvicorn main:app --reload
