@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from app.db.database import async_engine, Base
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import babyimages, users, tips
+from app.routers import babyimages, users, tips, logs
 
 from app.db.models.alarms import Alarm
 from app.db.models.babies import Baby
@@ -12,9 +12,7 @@ from app.db.models.care_group import Care_Group
 from app.db.models.diaries import Diary
 from app.db.models.parents import Parent
 from app.db.models.records import Record
-from app.db.models.users import User
-from app.db.models.tips import Tip
-from app.db.models.logs import Log
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -30,6 +28,7 @@ app = FastAPI(title="Backend API", lifespan=lifespan)
 app.include_router(babyimages.router)
 app.include_router(users.router)
 app.include_router(tips.router)
+app.include_router(logs.router)
 
 app.add_middleware(
     CORSMiddleware,
