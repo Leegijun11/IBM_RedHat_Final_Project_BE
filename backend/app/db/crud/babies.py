@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.db.models.babies import Baby 
-from app.db.models.care_groups import Care_Group
+from app.db.models.care_group import Care_Group
 from app.db.scheme.babies import Baby_Create, Baby_Update
 
 

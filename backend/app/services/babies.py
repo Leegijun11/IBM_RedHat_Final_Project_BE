@@ -41,7 +41,7 @@ class BabyService:
             db_data=await Baby_Crud.crud_babies_list(db, u_id)
             return db_data
         except Exception as e:
-            print(f"아미 목록 조회 에러 : {e}")
+            print(f"아이 목록 조회 에러 : {e}")
             raise HTTPException(status_code=500, detail="아이들의 정보를 불러오는 중 서버 오류가 발생했습니다.")        
 
         
@@ -49,12 +49,13 @@ class BabyService:
     @staticmethod
     async def service_babies_read(b_id:int, db: AsyncSession):
         try:
-            db_data=await Baby_Crud.crud_babies_detail(b_id, db)
-            if db_data is None:
-                raise HTTPException(status_code=400, detail="아이의 정보를 불러오는데 실패했습니다.")
-            return db_data
+            db_data=await Baby_Crud.crud_babies_detail(db, b_id)
         except Exception as e:
-            raise HTTPException(status_code=400, detail="아이의 정보를 불러오는데 실패했습니다.")
+            raise HTTPException(status_code=400, detail=f"아이의 세부 정보 로드 실패 : {e}")
+        if db_data is None:
+            raise HTTPException(status_code=404, detail="해당 아이 정보를 찾을 수 없습니다.")
+        return db_data
+        
         
 
     # 4. 아이 정보 수정(추가)
@@ -65,7 +66,7 @@ class BabyService:
             raise HTTPException(status_code=400, detail="키와 몸무게는 0보다 커야 합니다.")
             
         try:
-            exist_baby = await Baby_Crud.crud_babies_detail(b_id, db)
+            exist_baby = await Baby_Crud.crud_babies_detail(db, b_id)
             if exist_baby is None:
                 raise HTTPException(status_code=400, detail="아이의 정보를 수정하는데 실패했습니다.")
             
@@ -94,10 +95,19 @@ class BabyService:
     @staticmethod
     async def service_babies_delete(b_id:int, db: AsyncSession):
         try:
-            exist_baby=await Baby_Crud.crud_babies_detail(b_id, db)
-            if exist_baby is None:
-                raise HTTPException(status_code=400, detail="아이의 정보를 삭제하는데 실패했습니다.")
-            db_data=await Baby_Crud.crud_babies_del(b_id, db)
-            return db_data
+            exist_baby=await Baby_Crud.crud_babies_detail(db, b_id)
         except Exception as e:
-            raise HTTPException(status_code=400, detail="아이의 정보를 삭제하는데 실패했습니다.")
+            raise HTTPException(status_code=500, detail="아이 정보 확인 중 오류가 발생했습니다.")
+        if exist_baby is None:
+            raise HTTPException(status_code=404, detail="삭제할 아이의 정보가 존재하지 않습니다.")
+
+        try:
+            db_data=await Baby_Crud.crud_babies_del(db, b_id)
+
+            await db.commit()
+            return db_data
+        
+        except Exception as e:
+            await db.rollback()
+            raise HTTPException(status_code=500, detail="아이의 정보를 삭제하는데 실패했습니다.")
+        
