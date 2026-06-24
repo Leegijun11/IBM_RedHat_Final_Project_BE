@@ -36,3 +36,9 @@ async def router_alarm_list(receive_id: int, db: AsyncSession = Depends(get_db))
 @router.delete("/delete")
 async def router_alarm_delete(a_id: int, db:AsyncSession=Depends(get_db)):
     return await Alarm_Service.service_alarm_delete(db, a_id=a_id)
+
+
+#알람 전체 삭제
+@router.delete("/all_del")
+async def router_alarm_all_del(receive_id:int, db:AsyncSession=Depends(get_db)):
+    return await Alarm_Service.service_alarm_all_del(db, receive_id)

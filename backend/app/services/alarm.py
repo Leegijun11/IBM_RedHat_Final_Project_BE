@@ -96,3 +96,22 @@ class Alarm_Service:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"알람 삭제 실패 :{e}"
             )
+        
+    # 알람 전체 삭제
+    @staticmethod
+    async def service_alarm_all_del(db:AsyncSession, receive_id:int):
+        try:
+            db_data=await Alarm_Crud.crud_alarms_all_del(db, receive_id)
+
+            if not db_data:
+                return {"msg":"삭제할 알람이 없습니다."}
+            
+            await db.commit()
+            return {"msg":f"전체 알람이 {db_data}개 삭제되었습니다."}
+        
+        except HTTPException:
+            raise
+
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                detail=f"알람 전체 삭제 실패 : {e}")
