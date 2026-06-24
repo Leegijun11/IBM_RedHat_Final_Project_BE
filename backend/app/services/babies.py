@@ -1,20 +1,44 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.scheme.babies import Baby_Create, Baby_Update
+from app.db.scheme.care_groups import CareGroup_Create
 from app.db.crud.babies import Baby_Crud
+from app.db.crud.care_groups import CareGroup_Crud
+from app.db.crud.records import Record_Crud
+from app.db.scheme.records import Record_Create
+from datetime import datetime
 from fastapi import HTTPException
 
 class BabyService:
 
     # 1. 아이 정보 등록
     @staticmethod
-    async def service_babies_create(baby:Baby_Create, db: AsyncSession):
+    async def service_babies_create(u_id:int, baby:Baby_Create, db:AsyncSession):
         if baby.b_height <= 0 or baby.b_weight <= 0:
             raise HTTPException(status_code=400, detail="아이 정보 등록에 실패했습니다.")
         try:
-            db_data=await Baby_Crud.crud_babies_create(baby, db)
-            return db_data
+            new_group = CareGroup_Create(creator_id=u_id) 
+            care_group = await CareGroup_Crud.crud_caregroups_create(db, new_group)
+            
+            await db.flush()
+
+            generated_g_id = care_group.g_id  
+            if generated_g_id is None:
+                raise ValueError("그룹 ID(g_id) 발급에 실패했습니다.")
+            
+            baby_dict = baby.model_dump()
+            baby_dict["g_id"] = generated_g_id  
+            
+            db_baby = await Baby_Crud.crud_babies_create(db, baby_dict) 
+
+            await db.commit()
+            await db.refresh(db_baby)
+            
+            return db_baby
+            
         except Exception as e:
-            raise HTTPException(status_code=400, detail="아이 정보 등록에 실패했습니다.")
+            await db.rollback()  
+            print(f"BABY CREATE ERROR TRACE: {str(e)}")
+            raise HTTPException(status_code=400, detail="아이 정보 등록에 실패했습니다. (원인: {type(e).__name__})")
 
     # 2. 아이 목록 조회
     @staticmethod
@@ -40,21 +64,38 @@ class BabyService:
             raise HTTPException(status_code=400, detail="아이의 정보를 불러오는데 실패했습니다.")
         
 
-    # 4. 아이 정보 수정
+    # 4. 아이 정보 수정(추가)
     @staticmethod
-    async def service_babies_update(b_id:int, baby:Baby_Update, db: AsyncSession):
+    async def service_babies_update(b_id:int, baby:Baby_Update, db:AsyncSession):
         if (baby.b_height is not None and baby.b_height <= 0) or \
            (baby.b_weight is not None and baby.b_weight <= 0):
-           raise HTTPException(status_code=400, detail="키와 몸무게는 0보다 커야 합니다.")
+            raise HTTPException(status_code=400, detail="키와 몸무게는 0보다 커야 합니다.")
+            
         try:
-            exist_baby=await Baby_Crud.crud_babies_detail(b_id, db)
+            exist_baby = await Baby_Crud.crud_babies_detail(b_id, db)
             if exist_baby is None:
                 raise HTTPException(status_code=400, detail="아이의 정보를 수정하는데 실패했습니다.")
-            db_data=await Baby_Crud.crud_babies_update(b_id, baby, db)
-            return db_data
-        except Exception as e:
-            raise HTTPException(status_code=400, detail="아이의 정보를 수정하는데 실패했습니다.")
+            
+            past_record = Record_Create(
+                b_id=exist_baby.b_id,
+                r_height=exist_baby.b_height,
+                r_weight=exist_baby.b_weight
+            )
 
+            await Record_Crud.crud_records_create(db, past_record)
+            
+            db_data = await Baby_Crud.crud_babies_update(db, b_id, baby)
+            if db_data is None:
+                raise HTTPException(status_code=400, detail="아이의 정보를 수정하는데 실패했습니다.")
+            
+            await db.commit()
+            await db.refresh(db_data)
+            
+            return db_data
+            
+        except Exception as e:
+            await db.rollback()
+            raise HTTPException(status_code=400, detail="아이의 정보를 수정하는데 실패했습니다.")
 
     # 5. 아이 정보 삭제
     @staticmethod

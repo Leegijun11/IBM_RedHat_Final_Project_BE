@@ -3,15 +3,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.database import get_db 
 from app.db.scheme.babies import Baby_Create, Baby_Update, Baby_Read
 from app.services.babies import BabyService
-from fastapi import Body
 
 router = APIRouter(prefix="/babies", tags=["Baby"])
 
 # 1. 아이 정보 등록
 @router.post("/create", response_model=Baby_Read)
-async def routers_babies_create(baby:Baby_Create, db:AsyncSession=Depends(get_db)):
+async def routers_babies_create(u_id:int, baby:Baby_Create, db:AsyncSession=Depends(get_db)):
     try:
-        db_data=await BabyService.service_babies_create(baby, db)
+        db_data=await BabyService.service_babies_create(u_id, baby, db)
         return db_data
     except HTTPException as ee:
         raise ee
@@ -41,11 +40,11 @@ async def routers_babies_read(b_id:int, db:AsyncSession=Depends(get_db)):
         raise HTTPException(status_code=400, detail="아이의 정보를 불러오는데 실패했습니다.")
     
 # 4. 아이 정보 수정
-@router.put("/edit", response_model=Baby_Read)
-async def routers_babies_update(b_id:int=Body(...), baby:Baby_Update=Body(...), db:AsyncSession=Depends(get_db)):
+@router.put("/edit")
+async def routers_babies_update(b_id:int, baby:Baby_Update, db:AsyncSession=Depends(get_db)):
     try:
         db_data=await BabyService.service_babies_update(b_id, baby, db)
-        return db_data
+        return {"message":"수정되었습니다.", "data":db_data}
     except HTTPException as ee:
         raise ee
     except Exception as e:

@@ -12,6 +12,7 @@ class User_Crud:
                                hashed_pw:str) -> User:          
         data = user.model_dump()
         data["u_pw"] = hashed_pw
+        
         db_data=User(**data)
         db.add(db_data)
         await db.flush()
@@ -96,3 +97,11 @@ class User_Crud:
         
         return db_data
  
+
+
+     #입력한(u_account)아이디 정보 가져오기
+    @staticmethod
+    async def crud_users_get_by_account(db:AsyncSession, u_account: str)-> User | None:
+        result=await db.execute(select(User).filter(User.u_account==u_account))
+        return result.scalars().first()
+    

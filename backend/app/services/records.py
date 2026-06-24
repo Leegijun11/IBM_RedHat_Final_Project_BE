@@ -36,29 +36,18 @@ class RecordService:
     # 3. 성장기록 수정
     @staticmethod
     async def service_records_update(r_id:int, record:Record_Update, db:AsyncSession):
-        try:
-            exist_record=await Record_Crud.crud_records_update(r_id, record, db)
-            if exist_record is None:
-                raise HTTPException(status_code=400, detail="성장기록 수정에 실패하였습니다.")
-            
-            baby_info=await Baby_Crud.crud_babies_detail(b_id=exist_record.b_id, db)
-            if baby_info is None:
-                raise HTTPException(status_code=400, detail="성장기록 수정에 실패하였습니다.")
-            
-            record_update_data=Record_Update(
-                r_weight=baby_info.b_weight,
-                r_height=baby_info.b_height
-            )
-
-            if record_update_data.r_weight <= 0 or record_update_data.r_height <= 0:
+            if (record.r_height is not None and record.r_height <= 0) or \
+               (record.r_weight is not None and record.r_weight <= 0):
                 raise HTTPException(status_code=400, detail="키와 몸무게는 0보다 커야 합니다.")
-        
-            db_data=await Record_Crud.crud_records_update(r_id=r_id, record=record_update_data, db)
-            return db_data
-        except HTTPException as ee:
-            raise ee
-        except Exception as e:
-            raise HTTPException(status_code=400, detail="성장기록 수정에 실패하였습니다.")
+            try:
+                db_data=await Record_Crud.crud_records_update(r_id, record, db)
+                if db_data is None:
+                    raise HTTPException(status_code=400, detail="성장기록 수정에 실패하였습니다.")
+                return db_data
+            except HTTPException as ee:
+                raise ee
+            except Exception as e:
+                raise HTTPException(status_code=400, detail="성장기록 수정에 실패하였습니다.")
             
     # 4. 성장기록 삭제
     @staticmethod

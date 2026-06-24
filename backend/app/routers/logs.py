@@ -27,7 +27,7 @@ async def router_logs_detail(l_id: int,
 
 
 # DELETE 현재 기록 삭제
-@router.delete("/del", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/del")
 async def router_logs_del(l_id:int,
                           db: AsyncSession = Depends(get_db)):
     return await Log_Service.services_logs_del(db, l_id)
