@@ -16,6 +16,9 @@ class Parent_Create(Parent_Base):
 
 class Parent_Update(Parent_Base):
     current_b_id : int | None=None
+    p_role: str | None=None
+    p_category : str | None=None
+    p_state: str | None=None
 
     
 class Parent_Read(Parent_Create):

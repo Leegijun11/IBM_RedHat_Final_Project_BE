@@ -81,6 +81,35 @@ class Parent_Service:
             )
         
 
+    # 양육자 업데이트
+    @staticmethod
+    async def services_parent_update(db:AsyncSession, 
+                                     p_id:int, 
+                                     parent:Parent_Update):
+        try :
+            update_data=parent.model_dump(exclude_unset=True)
+
+            update_user=await Parent_Crud.crud_parents_update(db, p_id, update_data)
+            
+            if not update_user:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, 
+                                    detail="수정할 수 없습니다")
+                        
+            await db.commit()
+            await db.refresh(update_user)
+
+            return update_user
+        
+        except HTTPException:
+            await db.rollback()
+            raise
+
+        except Exception as e:
+            await db.rollback()
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+                                detail=f"양육자 정보 수정 실패 :{e}")
+
+
     #양육자 삭제
     @staticmethod
     async def service_parents_delete(db:AsyncSession, p_id:int):

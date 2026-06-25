@@ -39,9 +39,9 @@ class Parent_Crud:
 
     # 양육자 아기 선택 업데이트
     @staticmethod
-    async def crud_parents_update(db:AsyncSession, 
-                               p_id:int, 
-                               parent:Parent_Update) -> Parent | None:
+    async def crud_parents_update(db:AsyncSession,
+                                  p_id:int, 
+                                  parent:Parent_Update) -> Parent | None:
         db_data=await db.get(Parent, p_id)
         
         if db_data:             

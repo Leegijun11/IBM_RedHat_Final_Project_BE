@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import EmailStr
 
 from app.db.database import get_db
-from app.db.scheme.parents import Parent_Create
+from app.db.scheme.parents import Parent_Create, Parent_Update
 from app.services.parent import Parent_Service
 
 
@@ -31,6 +31,12 @@ async def router_parents_list(
     db:AsyncSession=Depends(get_db)):
     return await Parent_Service.service_parents_list(db, u_id=u_id)
 
+# 양육자 수정
+@router.post('/{p_id}')
+async def router_parents_update(p_id:int, 
+                                parent: Parent_Update,
+                                db:AsyncSession=Depends(get_db)):
+    return await Parent_Service.services_parent_update(db, p_id, parent)
 
 #양육자 삭제
 @router.delete('/del')
