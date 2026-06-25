@@ -28,6 +28,17 @@ class Parent_Crud:
         return result.scalars().first()
     
 
+    # 양육자 찾기
+    @staticmethod
+    async def crud_parents_find(db:AsyncSession,
+                                u_id:int,
+                                g_id:int) -> Parent | None:
+        result = await db.execute(select(Parent)
+                                  .where(Parent.u_id==u_id)
+                                  .where(Parent.g_id==g_id))
+        return result.scalars().one_or_none()
+    
+
     # 양육자 목록
     @staticmethod
     async def crud_parents_list(db:AsyncSession, 

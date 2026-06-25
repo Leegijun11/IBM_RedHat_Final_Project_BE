@@ -31,6 +31,15 @@ async def router_parents_list(
     db:AsyncSession=Depends(get_db)):
     return await Parent_Service.service_parents_list(db, u_id=u_id)
 
+
+# 양육자 찾기
+@router.get("/find")
+async def router_parents_find(u_id:int,
+                              g_id:ing,
+                              db:AsyncSession=Depends(get_db)):
+    return await Parent_Service.services_parent_find(db, u_id, g_id)
+
+
 # 양육자 수정
 @router.post('/{p_id}')
 async def router_parents_update(p_id:int, 

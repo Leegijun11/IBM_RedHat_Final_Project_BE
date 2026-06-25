@@ -79,7 +79,15 @@ class Parent_Service:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"공동 양육자 목록을 불러오는데 실패함: {e}"
             )
-        
+
+
+    # 양육자 찾기
+    @staticmethod
+    async def services_parent_find(db:AsyncSession,
+                                   u_id:int,
+                                   g_id:int):
+        return Parent_Service.services_parent_find(db, u_id, g_id)
+
 
     # 양육자 업데이트
     @staticmethod
