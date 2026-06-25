@@ -1,4 +1,7 @@
 #router_stories_create : 디지털북 생성
+#router_stories_list : b_id별 디지털북 목록
+#router_stories_detail : 디지털북 상세
+#router_stories_delete : 디지털북 삭제
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,3 +17,21 @@ router = APIRouter(prefix="/stories", tags=["Stories"])
 @router.post('/create', response_model=Story_Read)
 async def router_stories_create(story: Story_Create, db: AsyncSession = Depends(get_db)):
     return await Story_Service.service_stories_create(db, story)
+
+
+# b_id별 디지털북 목록
+@router.get('/list', response_model=list[Story_Read])
+async def router_stories_list(b_id: int, db: AsyncSession = Depends(get_db)):
+    return await Story_Service.service_stories_list(db, b_id)
+
+
+# 디지털북 삭제
+@router.delete('/del/{s_id}')
+async def router_stories_delete(s_id: int, db: AsyncSession = Depends(get_db)):
+    return await Story_Service.service_stories_delete(db, s_id)
+
+
+# 디지털북 상세
+@router.get('/{s_id}', response_model=Story_Read)
+async def router_stories_detail(s_id: int, db: AsyncSession = Depends(get_db)):
+    return await Story_Service.service_stories_detail(db, s_id)

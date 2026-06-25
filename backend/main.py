@@ -14,7 +14,6 @@ from app.db.models.diaries import Diary
 from app.db.models.parents import Parent
 from app.db.models.records import Record
 from app.db.models.stories import Story
-
 # Routers
 from app.routers import (
     babyimages, babies, babycharacters, record, 
@@ -55,5 +54,4 @@ app.include_router(logs.router)
 app.include_router(alarm.router)
 app.include_router(diaries.router)
 app.include_router(stories.router)
-
 # uvicorn main:app --reload

@@ -24,3 +24,29 @@ class Story_Crud:
         db.add(db_data)
         await db.flush()
         return db_data
+
+    # b_id 기준 디지털북 목록 조회
+    @staticmethod
+    async def crud_stories_list(db: AsyncSession, b_id: int) -> list[Story]:
+        result = await db.execute(
+            select(Story).filter(Story.b_id == b_id)
+        )
+        return result.scalars().all()
+
+    # 디지털북 상세 조회
+    @staticmethod
+    async def crud_stories_detail(db: AsyncSession, s_id: int) -> Story | None:
+        result = await db.execute(
+            select(Story).filter(Story.s_id == s_id)
+        )
+        return result.scalars().first()
+
+    # 디지털북 삭제
+    @staticmethod
+    async def crud_stories_del(db: AsyncSession, s_id: int) -> Story | None:
+        db_data = await db.get(Story, s_id)
+        if db_data:
+            await db.delete(db_data)
+            await db.flush()
+            return db_data
+        return None
