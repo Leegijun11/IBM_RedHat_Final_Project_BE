@@ -82,7 +82,7 @@ class User_Service:
 
             await User_Crud.crud_users_update_token(db, user.u_id, refresh_token)
 
-            response_data={"u_account":user.u_account,"u_name":user.u_name}
+            response_data={"u_id":user.u_id,"u_account":user.u_account,"u_name":user.u_name}
 
             await db.commit()
             return response_data, access_token, refresh_token
@@ -134,26 +134,38 @@ class User_Service:
                                 detail=f"유저 정보 조회중 에러 발생: {e}")
         
 
-    #다른 유저 정보
-    @staticmethod
-    async def service_users_get_u_id(db: AsyncSession, other_u_id:int):
-        try:
-            user=await User_Crud.crud_users_me(db, other_u_id)
-            if not user:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND, detail="다른 유저 정보 없음"
-                )
-            return{
-                    "u_account":user.u_account,
-                    "u_nickname":user.u_nickname,
-                    "u_created_at":user.u_created_at
-                }
-        except HTTPException:
-            raise
 
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
                                 detail=f" 다른 유저 정보중 에러 발생: {e}")
+        
+        
+    # 아이디(u_account)로 유저 검색
+    @staticmethod
+    async def service_users_search(db: AsyncSession, u_account: str):
+        try:
+            user = await User_Crud.crud_users_get_by_account(db, u_account)
+
+            if not user:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="사용자를 찾을 수 없습니다."
+            )
+
+            return {
+                "u_id": user.u_id,
+                "u_account": user.u_account,
+                "u_name": user.u_name
+        }
+
+        except HTTPException:
+            raise
+
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"사용자 검색 실패 : {e}"
+            )
         
 
     #아이디 찾기
@@ -245,4 +257,24 @@ class User_Service:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"정보 삭제에 실패했습니다{e}"
             )
+        
+    #다른 유저 정보
+    @staticmethod
+    async def service_users_get_u_id(db: AsyncSession, other_u_id:int):
+        try:
+            user=await User_Crud.crud_users_me(db, other_u_id)
+            if not user:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="다른 유저 정보 없음"
+                )
+            return{
+                    "u_account":user.u_account,
+                    "u_nickname":user.u_nickname,
+                    "u_created_at":user.u_created_at
+                }
+        except HTTPException:
+            raise
+            
+
+
             

@@ -20,20 +20,38 @@ from app.db.models.care_group import Care_Group
 
 class Parent_Service:
 
-    #양육자 등록
+    # 양육자 등록
     @staticmethod
-    async def service_parents_create(db:AsyncSession, parent:Parent_Create):
+    async def service_parents_create(db: AsyncSession, parent: Parent_Create):
         try:
+            # 이미 등록된 공동 양육자인지 확인
+            exist = await Parent_Crud.crud_parents_find(
+                db,
+                parent.u_id,
+                parent.g_id
+            )
+
+            if exist:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="이미 등록된 공동 양육자입니다."
+            )
+
             await Parent_Crud.crud_parents_create(db, parent=parent)
             await db.commit()
-            return{"msg":"공통 양육자를 초대했습니다"}
-        
+
+            return {"msg": "공동 양육자를 초대했습니다"}
+
         except HTTPException:
             raise
+
         except Exception as e:
             await db.rollback()
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                detail=f"공동 양육자 초대에 실패했습니다:{e}")
+            print("ERROR >>>",repr(e))
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"공동 양육자 초대에 실패했습니다: {e}"
+            )
 
     
     #양육자 목록
@@ -43,7 +61,7 @@ class Parent_Service:
             #요청된 u_id를 기반으로 정보를 찾음
             me=select(Parent).where(Parent.u_id==u_id)
             result_me=await db.execute(me)
-            me_data=result_me.scalar_one_or_none()
+            me_data=result_me.scalars().first()
 
             if not me_data or me_data.g_id is None:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
@@ -86,7 +104,26 @@ class Parent_Service:
     async def services_parent_find(db:AsyncSession,
                                    u_id:int,
                                    g_id:int):
-        return Parent_Service.services_parent_find(db, u_id, g_id)
+        try:
+            Parent = await Parent_Crud.crud_parents_find(db, u_id, g_id)
+
+            if not Parent:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="양육자를 찾을 수 없습니다."
+                )
+            
+            return Parent
+        
+        except HTTPException:
+            raise
+
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"양육자 조회 실패: {e}"
+            )
+        
 
 
     # 양육자 업데이트
@@ -97,7 +134,7 @@ class Parent_Service:
         try :
             update_data=parent.model_dump(exclude_unset=True)
 
-            update_user=await Parent_Crud.crud_parents_update(db, p_id, update_data)
+            update_user = await Parent_Crud.crud_parents_update(db, p_id, parent)
             
             if not update_user:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, 
@@ -139,5 +176,5 @@ class Parent_Service:
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"공동 양육자 지정이 취소가 실패되었습니다: {e}"
+                detail=f"공동 양육자 지정 취소가 실패되었습니다: {e}"
             )

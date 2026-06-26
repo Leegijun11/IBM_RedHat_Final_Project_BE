@@ -63,9 +63,6 @@ class Alarm_Service:
     async def service_alarm_list(db:AsyncSession, receive_id:int):
         try:
             alarms=await Alarm_Crud.crud_alarms_list(db, receive_id=receive_id)
-
-            if not alarms:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="알람 조회를 실패했습니다")
             
             return alarms
         
