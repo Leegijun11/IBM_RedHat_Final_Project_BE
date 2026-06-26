@@ -1,9 +1,11 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 
 # DB 및 엔진
 from app.db.database import async_engine, Base
+
 
 # Routers
 from app.routers import (
@@ -45,6 +47,6 @@ app.include_router(logs.router)
 app.include_router(alarm.router)
 app.include_router(diaries.router)
 app.include_router(stories.router)
-
-
 # uvicorn main:app --reload
+
+app.mount("/uploads",StaticFiles(directory="uploads"),name="uploads")
