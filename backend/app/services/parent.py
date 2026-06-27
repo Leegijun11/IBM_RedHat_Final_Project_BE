@@ -1,9 +1,3 @@
-#service_parents_create 양육자 등록
-#service_parents_list 양육자 목록
-#service_parents_delete 양육자 삭제
-
-
-
 
 from pydantic import BaseModel, Field, EmailStr, ConfigDict
 from fastapi import status, HTTPException
@@ -21,11 +15,20 @@ from app.db.crud.babies import Baby_Crud
 class Parent_Service:
 
     #양육자 등록
-    #양육자 등록
     @staticmethod
     async def service_parents_create(db:AsyncSession, parent:Parent_Create):
         try:
-            # 그룹의 첫 번째 아이를 current_b_id 기본값으로 설정
+            # 이미 그룹에 속해있는지 재확인 (수락 시점 기준)
+            existing = select(Parent).where(Parent.u_id == parent.u_id)
+            result_existing = await db.execute(existing)
+            existing_parent = result_existing.scalar_one_or_none()
+
+            if existing_parent and existing_parent.g_id is not None:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="이미 다른 공동 양육 그룹에 속해 있습니다"
+                )
+
             first_baby = await Baby_Crud.crud_babies_get_first_by_g_id(db, parent.g_id)
 
             parent_data = parent.model_dump()
