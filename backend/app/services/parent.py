@@ -16,15 +16,27 @@ from app.db.scheme.parents import Parent_Create,Parent_Base,Parent_Update,Parent
 from app.db.models.parents import Parent
 from app.db.models.users import User
 from app.db.models.care_group import Care_Group
-
-
+from app.db.models.babies import Baby
+from app.db.crud.babies import Baby_Crud
 class Parent_Service:
 
+    #양육자 등록
     #양육자 등록
     @staticmethod
     async def service_parents_create(db:AsyncSession, parent:Parent_Create):
         try:
-            await Parent_Crud.crud_parents_create(db, parent=parent)
+            # 그룹의 첫 번째 아이를 current_b_id 기본값으로 설정
+            first_baby = await Baby_Crud.crud_babies_get_first_by_g_id(db, parent.g_id)
+
+            parent_data = parent.model_dump()
+            if first_baby:
+                parent_data["current_b_id"] = first_baby.b_id
+
+            from app.db.models.parents import Parent
+            db_data = Parent(**parent_data)
+            db.add(db_data)
+            await db.flush()
+
             await db.commit()
             return{"msg":"공통 양육자를 초대했습니다"}
         
@@ -53,18 +65,19 @@ class Parent_Service:
             if not group_members:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
             
-            #u_id,로 user테이블 일괄 조회
+            #u_id로 user테이블 일괄 조회 (u_image 추가)
             member_u_id=[m.u_id for m in group_members]
 
-            member_users=select(User.u_id, User.u_name).where(User.u_id.in_(member_u_id))
+            member_users=select(User.u_id, User.u_name, User.u_image).where(User.u_id.in_(member_u_id))
             result_users=await db.execute(member_users)
             #딕셔너리 변환
-            user_name_map={row.u_id:row.u_name for row in result_users.all()}
+            user_map={row.u_id: {"u_name": row.u_name, "u_image": row.u_image} for row in result_users.all()}
 
             return [
                 {
                     "p_id":member.p_id,
-                    "u_name": user_name_map.get(member.u_id),
+                    "u_name": user_map.get(member.u_id, {}).get("u_name"),
+                    "u_image": user_map.get(member.u_id, {}).get("u_image"),
                     "p_role": member.p_role,
                     "p_category": member.p_category,
                     "p_state": member.p_state
@@ -141,3 +154,42 @@ class Parent_Service:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"공동 양육자 지정이 취소가 실패되었습니다: {e}"
             )
+        
+    # 현재 아이 설정
+    @staticmethod
+    async def service_parents_set_current_baby(db: AsyncSession, u_id: int, b_id: int):
+        try:
+            updated = await Parent_Crud.crud_parents_set_current_baby(db, u_id, b_id)
+
+            if not updated:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="유저 정보를 찾을 수 없습니다")
+
+            await db.commit()
+            return {"msg": "현재 아이가 변경되었습니다.", "current_b_id": b_id}
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            await db.rollback()
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"현재 아이 설정 실패: {e}")
+
+    # 현재 아이 조회
+    @staticmethod
+    async def service_parents_get_current_baby(db: AsyncSession, u_id: int):
+        try:
+            parent = await Parent_Crud.crud_parents_get_current_baby(db, u_id)
+
+            if not parent or not parent.current_b_id:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="선택된 아이가 없습니다")
+
+            baby = await db.get(Baby, parent.current_b_id)
+
+            if not baby:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="아이 정보를 찾을 수 없습니다")
+
+            return baby
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"현재 아이 조회 실패: {e}")

@@ -77,4 +77,27 @@ class Parent_Crud:
             return db_data
         return None
     
+    # 현재 아이 설정
+    @staticmethod
+    async def crud_parents_set_current_baby(db: AsyncSession, u_id: int, b_id: int) -> Parent | None:
+        result = await db.execute(select(Parent).filter(Parent.u_id == u_id))
+        parent = result.scalars().first()
+
+        if parent:
+            parent.current_b_id = b_id
+            await db.flush()
+            return parent
+        return None
+
+    # 현재 아이 조회
+    @staticmethod
+    async def crud_parents_get_current_baby(db: AsyncSession, u_id: int) -> Parent | None:
+        result = await db.execute(select(Parent).filter(Parent.u_id == u_id))
+        return result.scalars().first()
     
+    
+    # 유저가 이미 속한 Parent row 조회 (그룹 확인용)
+    @staticmethod
+    async def crud_parents_get_by_u_id(db: AsyncSession, u_id: int) -> Parent | None:
+        result = await db.execute(select(Parent).filter(Parent.u_id == u_id))
+        return result.scalars().first()

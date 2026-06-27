@@ -1,0 +1,23 @@
+# 1. 로컬 환경 변수 파일
+.env
+.env.local
+
+# 2. 파이썬 실행 시 자동 생성되는 캐시 파일
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 3. 로컬 가상환경 폴더
+.venv/
+venv/
+venv2/
+ENV/
+
+# 4. 에디터 및 툴 설정 파일
+.vscode/
+.idea/
+.DS_Store
+
+# 5. 데이터 업로드 및 로컬 이미지 저장 폴더 (접두사 제거!)
+uploads/
+images/

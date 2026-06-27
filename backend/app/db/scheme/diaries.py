@@ -26,6 +26,7 @@ class Diary_Read(BaseModel):
 class Diary_List_Item(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+    d_id: int
     d_title: str
     d_content: str
     d_label: str

@@ -17,19 +17,19 @@ class Record_Crud:
         return db_data
 
 
-    # 아이 성장 정보들
+    # 아이 성장 정보 조회
     @staticmethod
-    async def crud_records_details(db: AsyncSession,
-                                   b_id: int,
-                                   start_date: datetime,
-                                   end_date: datetime) -> list[Record]:
-        query = (
+    async def crud_records_details(
+        db: AsyncSession,
+        b_id: int
+    ) -> list[Record]:
+
+        result = await db.execute(
             select(Record)
             .where(Record.b_id == b_id)
-            .where(Record.r_date.between(start_date, end_date))
+            .order_by(Record.r_date.asc())
         )
-        
-        result = await db.execute(query)
+
         return list(result.scalars().all())
 
 

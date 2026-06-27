@@ -20,42 +20,39 @@ from app.db.scheme.alarms import Alarm_Base, Alarm_Create, Alarm_Read
 from app.db.crud.alarms import Alarm_Crud
 
 
-
 class Alarm_Service:
-
-    #알람 생성
     @staticmethod
-    async def service_alarm_create(db:AsyncSession, send_id: int, receive_id: int):
+    async def service_alarm_create(db: AsyncSession, send_id: int, receive_account: str):
         try:
-            #send_id의 정보를 찾아서 g_id를 알아냄
-            sender=select(Parent).where(Parent.u_id==send_id)
-            result_sender=await db.execute(sender)
-            group_sender=result_sender.scalar_one_or_none()
-            
+            # 계정으로 유저 찾기
+            receiver = await User_Crud.crud_users_get_by_account(db, receive_account)
+            if not receiver:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="존재하지 않는 계정입니다")
+
+            receive_id = receiver.u_id
+
+            sender = select(Parent).where(Parent.u_id == send_id)
+            result_sender = await db.execute(sender)
+            group_sender = result_sender.scalar_one_or_none()
+
             if not group_sender or group_sender.g_id is None:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="그룹에 없는 유저")
-            
-            alarm_data=Alarm_Create(
+
+            alarm_data = Alarm_Create(
                 send_id=send_id,
                 receive_id=receive_id,
                 g_id=group_sender.g_id)
-            
 
-            db_data=await Alarm_Crud.crud_alarms_create(db, alarm=alarm_data)
+            db_data = await Alarm_Crud.crud_alarms_create(db, alarm=alarm_data)
             await db.commit()
 
             return db_data
 
-
         except HTTPException:
             raise
-
         except Exception as e:
             await db.rollback()
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, 
-                detail=f"알람 생성 실패: {e}"  
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"알람 생성 실패: {e}")
 
 
     #내 알람 목록
