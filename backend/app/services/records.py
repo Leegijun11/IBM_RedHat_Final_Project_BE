@@ -23,19 +23,36 @@ class RecordService:
     
     # 2. 성장기록 조회
     @staticmethod
-    async def service_records_list(b_id:int, start_date:datetime, end_date:datetime, db:AsyncSession):
+    async def service_records_list(
+        b_id: int,
+        db: AsyncSession
+    ):
         try:
-            exist_baby=await Baby_Crud.crud_babies_detail(db, b_id)
-        except Exception as e:
-            raise HTTPException(status_code=500, detail="성장기록을 조회하는 중 오류가 발생했습니다.")
+            exist_baby = await Baby_Crud.crud_babies_detail(db, b_id)
+        except Exception:
+            raise HTTPException(
+                status_code=500,
+                detail="성장기록을 조회하는 중 오류가 발생했습니다."
+            )
+
         if exist_baby is None:
-            raise HTTPException(status_code=404, detail="해당 아기 정보를 찾을 수 없습니다.")
+            raise HTTPException(
+                status_code=404,
+                detail="해당 아기 정보를 찾을 수 없습니다."
+            )
 
         try:
-            db_data=await Record_Crud.crud_records_details(db, b_id, start_date, end_date)
+            db_data = await Record_Crud.crud_records_details(
+                db,
+                b_id
+            )
             return db_data
-        except Exception as e:
-            raise HTTPException(status_code=500, detail="성장기록 목록을 불러오는데 실패했습니다.")
+
+        except Exception:
+            raise HTTPException(
+                status_code=500,
+                detail="성장기록 목록을 불러오는데 실패했습니다."
+            )
         
     # 3. 성장기록 수정
     @staticmethod
