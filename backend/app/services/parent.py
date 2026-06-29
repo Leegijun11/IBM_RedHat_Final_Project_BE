@@ -179,10 +179,6 @@ class Parent_Service:
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-<<<<<<< HEAD
-                detail=f"공동 양육자 지정 취소가 실패되었습니다: {e}"
-            )
-=======
                 detail=f"공동 양육자 지정이 취소가 실패되었습니다: {e}"
             )
         
@@ -224,4 +220,3 @@ class Parent_Service:
             raise
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"현재 아이 조회 실패: {e}")
->>>>>>> 1c185d7dc1db73417cb45db46c66f556f8c724a2
