@@ -8,16 +8,12 @@
 #router_users_delete: 유저 삭제
 #router_users_get_u_id: 다른 유저 정보
 
-from urllib import response
 from fastapi import APIRouter, Depends, Response, status, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import EmailStr
 from app.db.scheme.users import User_Create, User_Update, User_Login
-from app.services.users import User_Service  
-from app.core.jwt_handle import verify_token
-from app.core.auth import set_auth_cookies, auth_get_u_id
-from app.db.scheme.users import User_Read,User_Login,User_Base,User_Public,User_Create,User_Update
 from app.services.users import User_Service
+from app.core.auth import set_auth_cookies, auth_get_u_id
 from app.db.database import get_db
 
 
