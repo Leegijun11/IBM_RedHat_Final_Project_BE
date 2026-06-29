@@ -2,10 +2,11 @@
 #router_users_login: 로그인
 #router_users_logout: 로그아웃
 #router_users_me: 현재 유저 정보 
-#router_users_get_u_id: 다른 유저 정보
 #router_users_find_account: 아이디 찾기
+#router_users_search: 아이디로 유저 검색
 #router_users_update: 유저 수정
 #router_users_delete: 유저 삭제
+#router_users_get_u_id: 다른 유저 정보
 
 from urllib import response
 from fastapi import APIRouter, Depends, Response, status, HTTPException, Request
@@ -52,6 +53,7 @@ async def router_users_me(u_id:int=Depends(auth_get_u_id), db:AsyncSession=Depen
     return user_data
 
 
+
 #아이디 찾기
 @router.get('/find_account')
 async def router_users_find_account(u_name:str, u_email:EmailStr,u_phone:str, db:AsyncSession=Depends(get_db)):
@@ -84,7 +86,6 @@ async def router_users_update(user_update:User_Update, u_id:int=Depends(auth_get
 async def router_users_delete(response:Response, u_id:int=Depends(auth_get_u_id), db:AsyncSession=Depends(get_db)):
     return await User_Service.service_users_delete(db, u_id)
     #쿠키 삭제(보류)
-
 
 
 #다른 유저 정보
