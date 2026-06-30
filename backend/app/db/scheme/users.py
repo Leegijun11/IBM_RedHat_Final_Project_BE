@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, EmailStr, ConfigDict
 from datetime import datetime,timezone
-from typing import Annotated
+from typing import Annotated, Optional
 
 
 class User_Base(BaseModel): 
@@ -19,10 +19,15 @@ class User_Create(BaseModel):
     u_email: EmailStr
     u_phone: str
     u_address: str
+    u_image: Optional[str] = None
 
 
 class User_Login(BaseModel):
     u_account: str
+    u_pw: Annotated[str, Field(max_length=72)]
+
+
+class User_pw(BaseModel):
     u_pw: Annotated[str, Field(max_length=72)]
 
 
@@ -33,6 +38,7 @@ class User_Update(BaseModel):
     u_email: EmailStr | None = None   
     u_phone: str | None = None   
     u_address: str | None = None
+    u_image: str | None = None
 
 # class User_Public(User_Base):
 #     u_name: str
@@ -44,6 +50,7 @@ class User_Read(User_Base):
     u_name: str
     u_nickname : str
     u_address: str
+    u_image: Optional[str] = None
     u_created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class User_Public(BaseModel):

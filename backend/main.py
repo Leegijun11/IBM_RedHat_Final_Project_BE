@@ -1,9 +1,12 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
+from app.core.scheduler import start_scheduler
 
-# DB 및 엔진
 from app.db.database import async_engine, Base
+from app.db.models.milestones import Milestone
+from app.db.models.babymilestones import BabyMilestone
 
 # Models
 from app.db.models.alarms import Alarm
@@ -18,24 +21,32 @@ from app.db.models.forums import Forums
 from app.db.models.forumlikes import ForumLike
 from app.db.models.forumtags import ForumTag
 # Routers
+
 from app.routers import (
     babyimages, babies, babycharacters, record, 
-    users, tips, logs, parent, alarm, diaries, stories, forum, forumlikes
+    users, tips, logs, parent, alarm, diaries, stories,
+    milestones, forum, forumlikes
 )
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+    start_scheduler()   # 서버 시작 시 스케줄러도 같이 시작
+
     yield
     await async_engine.dispose()
 
+
 app = FastAPI(title="Backend API", lifespan=lifespan)
+
 
 # CORS 설정
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -59,4 +70,6 @@ app.include_router(diaries.router)
 app.include_router(stories.router)
 app.include_router(forum.router)
 app.include_router(forumlikes.router)
+app.include_router(milestones.router)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 # uvicorn main:app --reload

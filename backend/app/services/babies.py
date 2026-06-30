@@ -8,6 +8,8 @@ from app.db.scheme.records import Record_Create
 from datetime import datetime
 from fastapi import HTTPException
 from argparse import Namespace
+from app.db.crud.parents import Parent_Crud
+from app.db.scheme.parents import Parent_Create
 
 class BabyService:
 
@@ -17,21 +19,47 @@ class BabyService:
         if baby.b_height <= 0 or baby.b_weight <= 0:
             raise HTTPException(status_code=400, detail="키와 몸무게는 0보다 커야 합니다.")
         try:
-            new_group = CareGroup_Create(creator_id=u_id) 
-            care_group = await CareGroup_Crud.crud_caregroups_create(db, new_group) 
-            
+            # 1) 이 유저가 이미 속한 그룹이 있는지 확인
+            existing_parent = await Parent_Crud.crud_parents_get_by_u_id(db, u_id)
+
+            if existing_parent and existing_parent.g_id is not None:
+                # 이미 그룹이 있으면 그 그룹을 그대로 사용
+                g_id = existing_parent.g_id
+            else:
+                # 없으면 새 그룹 생성
+                new_group = CareGroup_Create(creator_id=u_id)
+                care_group = await CareGroup_Crud.crud_caregroups_create(db, new_group)
+                g_id = care_group.g_id
+
+            # 2) 아이 등록 (g_id는 기존 그룹 또는 새 그룹)
             baby_dict = baby.model_dump()
-            baby_dict["g_id"] = care_group.g_id  
-            
-            db_baby = await Baby_Crud.crud_babies_create(db, baby_dict) 
+            baby_dict["g_id"] = g_id
+
+            db_baby = await Baby_Crud.crud_babies_create(db, baby_dict)
+
+            # 3) Parent row 처리
+            if existing_parent:
+                # 이미 Parent row가 있으면 current_b_id만 새로 등록한 아이로 갱신
+                existing_parent.current_b_id = db_baby.b_id
+            else:
+                # 처음 등록이면 Parent row 새로 생성
+                member_data = Parent_Create(
+                    p_role="parent",
+                    p_category="guardian",
+                    p_state="active",
+                    g_id=g_id,
+                    u_id=u_id,
+                    current_b_id=db_baby.b_id,
+                )
+                await Parent_Crud.crud_parents_create(db, parent=member_data)
 
             await db.commit()
             await db.refresh(db_baby)
-            
+
             return db_baby
-            
+
         except Exception as e:
-            await db.rollback()  
+            await db.rollback()
             raise HTTPException(status_code=400, detail=f"{e}아이 정보 등록에 실패했습니다.")
 
     # 2. 아이 목록 조회

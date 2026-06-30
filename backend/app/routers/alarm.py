@@ -13,7 +13,7 @@ from app.db.database import get_db
 from app.db.scheme.alarms import Alarm_Create
 from app.services.alarm import Alarm_Service
 from app.db.scheme.users import User_Base
-
+from app.core.auth import auth_get_u_id
 
 
 router=APIRouter(prefix="/alarms", tags=['Alarm'])
@@ -21,14 +21,13 @@ router=APIRouter(prefix="/alarms", tags=['Alarm'])
 
 #알람 추가
 @router.post("/create")
-async def router_alarm_create(send_id:int,receive_id:int, db:AsyncSession=Depends(get_db)):
-    return await Alarm_Service.service_alarm_create(db, send_id=send_id, receive_id=receive_id)
-
+async def router_alarm_create(receive_account: str, send_id: int = Depends(auth_get_u_id), db:AsyncSession=Depends(get_db)):
+    return await Alarm_Service.service_alarm_create(db, send_id=send_id, receive_account=receive_account)
 
 
 #내 알람 목록
 @router.get("/list")
-async def router_alarm_list(receive_id: int, db: AsyncSession = Depends(get_db)):
+async def router_alarm_list(receive_id: int = Depends(auth_get_u_id), db: AsyncSession = Depends(get_db)):
     return await Alarm_Service.service_alarm_list(db, receive_id=receive_id)
 
 
@@ -40,5 +39,5 @@ async def router_alarm_delete(a_id: int, db:AsyncSession=Depends(get_db)):
 
 #알람 전체 삭제
 @router.delete("/all_del")
-async def router_alarm_all_del(receive_id:int, db:AsyncSession=Depends(get_db)):
+async def router_alarm_all_del(receive_id: int = Depends(auth_get_u_id), db:AsyncSession=Depends(get_db)):
     return await Alarm_Service.service_alarm_all_del(db, receive_id)

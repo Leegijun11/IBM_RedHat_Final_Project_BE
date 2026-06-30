@@ -3,7 +3,7 @@ from sqlalchemy.future import select
 from app.db.models.babies import Baby 
 from app.db.models.care_group import Care_Group
 from app.db.scheme.babies import Baby_Create, Baby_Update
-
+from app.db.models.parents import Parent
 
 class Baby_Crud:
     # 아이 정보 등록
@@ -18,11 +18,13 @@ class Baby_Crud:
 
     # 아이 목록
     @staticmethod
-    async def crud_babies_list(db:AsyncSession,
-                               u_id:int) -> list[Baby]:
-        result = await db.execute(select(Baby)
-                                  .join(Care_Group, Baby.g_id == Care_Group.g_id)
-                                  .filter(Care_Group.creator_id == u_id))
+    async def crud_babies_list(db: AsyncSession,
+                            u_id: int) -> list[Baby]:
+        result = await db.execute(
+            select(Baby)
+            .join(Parent, Baby.g_id == Parent.g_id)
+            .filter(Parent.u_id == u_id)
+        )
         return result.scalars().all()
 
 
@@ -64,3 +66,9 @@ class Baby_Crud:
             return db_data
         return None
   
+    @staticmethod
+    async def crud_babies_get_first_by_g_id(db: AsyncSession, g_id: int) -> Baby | None:
+        result = await db.execute(
+            select(Baby).filter(Baby.g_id == g_id).order_by(Baby.b_id.asc())
+        )
+        return result.scalars().first()

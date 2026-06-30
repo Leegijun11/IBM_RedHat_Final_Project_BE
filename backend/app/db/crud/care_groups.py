@@ -17,6 +17,14 @@ class CareGroup_Crud:
         await db.flush()
         return db_data
 
+    # 그룹 검색
+    @staticmethod
+    async def crud_caregroups_find(db:AsyncSession,
+                                   g_id:int) -> Care_Group:
+         result = await db.execute(select(Care_Group)
+                                   .where(Care_Group.g_id==g_id))
+         return result
+        
 
     # 그룹 삭제
     @staticmethod

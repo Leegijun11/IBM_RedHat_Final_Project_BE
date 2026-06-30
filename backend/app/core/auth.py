@@ -36,6 +36,7 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str, 
 
 
 async def auth_get_u_id(request: Request, response: Response) -> int:
+    
     access_token = request.cookies.get("access_token")
     refresh_token = request.cookies.get("refresh_token")
 
