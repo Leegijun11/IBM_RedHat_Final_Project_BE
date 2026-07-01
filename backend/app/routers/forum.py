@@ -10,7 +10,7 @@ from urllib import response
 from fastapi import APIRouter, Depends, Response, status, HTTPException, Request, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import EmailStr
-
+from enum import Enum
 from app.db.database import get_db
 from app.db.scheme.forums import Forum_Create, Forum_Update, Forum_Read
 from app.services.forums import Forum_Service
@@ -18,6 +18,28 @@ from app.core.auth import auth_get_u_id, get_optional
 
 
 router=APIRouter(prefix="/forum", tags=["Forum"])
+
+#정렬 분류
+class SortOption(str, Enum):
+    latest= "latest"
+    likes="likes"
+
+#카테고리 분류
+class TagOption(str, Enum):
+    sleep = "sleep"
+    food = "food"
+    health = "health"
+    play = "play"
+
+#아기 기질 분류
+class CharacterOption(str, Enum):
+    curiosity = "curiosity"
+    active = "active"
+    shy = "shy"
+    eater = "eater"
+    sleepy = "sleepy"
+    charm = "charm"
+
 
 #게시글 생성
 @router.post("/create", response_model=Forum_Read)
@@ -27,12 +49,15 @@ async def router_forums_create(forum_data: Forum_Create, u_id: int=Depends(auth_
 
 #게시글 목록 조회
 @router.get("/list", response_model=list[Forum_Read])
-async def router_forums_list(tag: str | None=None,
-                             baby_character: str | None=None,
-                             sort: str | None=None,
+async def router_forums_list(tag: TagOption | None = Query(None),
+                             baby_character: CharacterOption | None = Query(None),
+                             sort: SortOption=Query(SortOption.latest),
                              u_id : int | None=Depends(get_optional),
                              db: AsyncSession=Depends(get_db)):
-    return await Forum_Service.service_forums_list(db, tag=tag, baby_character=baby_character, sort=sort, u_id=u_id)
+    return await Forum_Service.service_forums_list(db, tag=tag.value if tag else None, 
+                                                   baby_character=baby_character.value if baby_character else None, 
+                                                   sort=sort.value, 
+                                                   u_id=u_id)
     
 
 #게시글 상세 조회

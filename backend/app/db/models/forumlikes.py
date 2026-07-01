@@ -9,6 +9,7 @@ from app.db.models.forums import Forums
 # 순환 참조(Circular Import) 방지를 위한 타입 체킹
 if TYPE_CHECKING:
     from app.db.models.users import User
+    from app.db.models.forumcomments import ForumComment
 
 class ForumLike(Base):
     __tablename__ = 'forumlikes'

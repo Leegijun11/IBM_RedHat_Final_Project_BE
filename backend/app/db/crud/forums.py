@@ -35,15 +35,21 @@ class Forums_CRUD:
             ft_food=forum_data.forum_tag.ft_food,
             ft_health=forum_data.forum_tag.ft_health,
             ft_play=forum_data.forum_tag.ft_play,
-
         )
         new_forum.forum_tag=new_tag
 
 
         db.add(new_forum)
         await db.commit()
-        await db.refresh(new_forum)
-        return new_forum
+
+        created_forum=select(Forums).options(joinedload(Forums.user),joinedload(Forums.forum_tag)).where(Forums.f_id==new_forum.f_id)
+
+        result=await db.execute(created_forum)
+        result_forum=result.scalar_one()
+
+        result_forum.is_liked=False
+
+        return result_forum
 
 
 
@@ -82,7 +88,7 @@ class Forums_CRUD:
             list_forums=list_forums.join(Forums.baby).join(Baby.character).where(CHARACTER_MAP[baby_character]==True)
 
         #정렬
-        if sort == 'like':
+        if sort == 'likes':
             list_forums=list_forums.order_by(desc(Forums.f_like_count), desc(Forums.f_created_at))
         else:
             list_forums=list_forums.order_by(desc(Forums.f_created_at))
@@ -103,7 +109,7 @@ class Forums_CRUD:
             liked_result = await db.execute(liked_stmt)
             liked_set = set(liked_result.scalars().all()) 
                 
-
+            
             for f in forums:
                 f.is_liked = f.f_id in liked_set
         else:

@@ -8,15 +8,17 @@ class ForumComment_Base(BaseModel):
 
 
 class ForumComment_Create(ForumComment_Base):
-    f_id: int
-    u_id: int
+    pass
 
 
-class Forum_Update(BaseModel):
+class ForumComment_Update(BaseModel):
     fc_content: str | None = None
+    # u_id: int
 
 
-class Forum_Read(ForumComment_Base):
+class ForumComment_Read(ForumComment_Base):
     f_id:int
     fc_id:int
     u_id:int
+    fc_like_count: int=0
+    is_liked: bool=False

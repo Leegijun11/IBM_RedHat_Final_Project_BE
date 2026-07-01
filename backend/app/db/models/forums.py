@@ -3,7 +3,7 @@ from app.db.database import Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey, String, Text, TIMESTAMP, func, Boolean, Integer
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, List
 
 # 순환 참조(Circular Import) 방지를 위한 타입 체킹
 if TYPE_CHECKING:
@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from app.db.models.forumlikes import ForumLike
     from app.db.models.forumtags import ForumTag
     from app.db.models.babies import Baby
+    from app.db.models.forumcomments import ForumComment
 
 
 # 1. 게시글 테이블 (Forums)
@@ -39,3 +40,6 @@ class Forums(Base):
     b_id: Mapped[Optional[int]]=mapped_column(ForeignKey('babies.b_id', ondelete="SET NULL"), nullable=True)
 
     baby: Mapped[Optional["Baby"]] = relationship("Baby", back_populates="forums")
+    forum_likes: Mapped[List["ForumLike"]] = relationship("ForumLike", back_populates="forum", cascade="all, delete-orphan")
+
+    comments: Mapped[list["ForumComment"]] = relationship("ForumComment", back_populates="forum", cascade="all, delete-orphan")

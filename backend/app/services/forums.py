@@ -14,7 +14,6 @@ from app.db.crud.forumlikes import ForumLike
 
 class Forum_Service:
     
-
     #게시물 작성
     @staticmethod
     async def service_forums_create(db: AsyncSession, forum_data:Forum_Create, u_id:int ):

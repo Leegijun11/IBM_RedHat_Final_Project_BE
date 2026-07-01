@@ -20,12 +20,14 @@ from app.db.models.stories import Story
 from app.db.models.forums import Forums
 from app.db.models.forumlikes import ForumLike
 from app.db.models.forumtags import ForumTag
+from app.db.models.forumcomments import ForumComment
+from app.db.models.forumcommentlikes import ForumCommentLike
 # Routers
 
 from app.routers import (
     babyimages, babies, babycharacters, record, 
     users, tips, logs, parent, alarm, diaries, stories,
-    milestones, forum, forumlikes
+    milestones, forum, forumlikes, forumcomments, forumcommentlikes
 )
 
 
@@ -71,5 +73,8 @@ app.include_router(stories.router)
 app.include_router(forum.router)
 app.include_router(forumlikes.router)
 app.include_router(milestones.router)
+app.include_router(forumcomments.router)
+app.include_router(forumcommentlikes.router)
+
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 # uvicorn main:app --reload
