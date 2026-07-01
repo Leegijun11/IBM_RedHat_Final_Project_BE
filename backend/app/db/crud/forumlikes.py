@@ -10,6 +10,7 @@ from app.db.models.forumlikes import ForumLike
 from app.db.models.forums import Forums
 
 
+
 class ForumLikes_CRUD:
 
     #게시글 좋아요 생성
@@ -61,3 +62,6 @@ class ForumLikes_CRUD:
 
         await db.commit()
         return True
+    
+    
+
