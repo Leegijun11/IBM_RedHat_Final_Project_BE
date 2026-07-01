@@ -11,7 +11,7 @@ from app.db.models.babymilestones import BabyMilestone
 from app.routers import (
     babyimages, babies, babycharacters, record, 
     users, tips, logs, parent, alarm, diaries, stories,
-    milestones
+    milestones, health
 )
 
 
@@ -20,7 +20,7 @@ async def lifespan(app: FastAPI):
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    start_scheduler()   # 서버 시작 시 스케줄러도 같이 시작
+    start_scheduler()  
 
     yield
     await async_engine.dispose()
@@ -42,7 +42,7 @@ app.add_middleware(
 async def root():
     return {"message": "home"}
 
-# Router 등록
+app.include_router(health.router)
 app.include_router(users.router)
 app.include_router(parent.router)
 app.include_router(tips.router)
