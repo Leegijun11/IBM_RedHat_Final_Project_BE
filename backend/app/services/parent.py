@@ -56,6 +56,7 @@ class Parent_Service:
             return {"msg": "공동 양육자 초대를 수락하였습니다"}
 
         except HTTPException:
+            await db.rollback()
             raise
 
         except Exception as e:
