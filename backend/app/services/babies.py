@@ -5,7 +5,6 @@ from app.db.crud.babies import Baby_Crud
 from app.db.crud.care_groups import CareGroup_Crud
 from app.db.crud.records import Record_Crud
 from app.db.scheme.records import Record_Create
-from datetime import datetime
 from fastapi import HTTPException
 from argparse import Namespace
 from app.db.crud.parents import Parent_Crud
@@ -15,7 +14,7 @@ class BabyService:
 
     # 1. 아이 정보 등록
     @staticmethod
-    async def service_babies_create(u_id: int, baby: Baby_Create, db: AsyncSession):
+    async def service_babies_create(db: AsyncSession, u_id: int, baby: Baby_Create):
         if baby.b_height <= 0 or baby.b_weight <= 0:
             raise HTTPException(status_code=400, detail="키와 몸무게는 0보다 커야 합니다.")
         try:
@@ -64,18 +63,17 @@ class BabyService:
 
     # 2. 아이 목록 조회
     @staticmethod
-    async def service_babies_list(u_id:int, db:AsyncSession):
+    async def service_babies_list(db:AsyncSession, u_id:int):
         try:
             db_data=await Baby_Crud.crud_babies_list(db, u_id)
             return db_data
         except Exception as e:
-            print(f"아이 목록 조회 에러 : {e}")
-            raise HTTPException(status_code=500, detail="아이들의 정보를 불러오는 중 서버 오류가 발생했습니다.")        
+            raise HTTPException(status_code=500, detail=f"아이들의 정보를 불러오는 중 서버 오류가 발생했습니다 : {e}")        
 
         
     # 3. 아이 세부 정보
     @staticmethod
-    async def service_babies_read(b_id:int, db: AsyncSession):
+    async def service_babies_read(db: AsyncSession, b_id:int):
         try:
             db_data=await Baby_Crud.crud_babies_detail(db, b_id)
         except Exception as e:
@@ -88,7 +86,7 @@ class BabyService:
 
     # 4. 아이 정보 수정(추가)
     @staticmethod
-    async def service_babies_update(b_id:int, baby:Baby_Update, db:AsyncSession):
+    async def service_babies_update(db:AsyncSession, b_id:int, baby:Baby_Update):
         if (baby.b_height is not None and baby.b_height <= 0) or \
            (baby.b_weight is not None and baby.b_weight <= 0):
             raise HTTPException(status_code=400, detail="키와 몸무게는 0보다 커야 합니다.")
@@ -121,7 +119,7 @@ class BabyService:
 
     # 5. 아이 정보 삭제
     @staticmethod
-    async def service_babies_delete(b_id:int, db: AsyncSession):
+    async def service_babies_delete(db: AsyncSession, b_id:int):
         try:
             exist_baby=await Baby_Crud.crud_babies_detail(db, b_id)
         except Exception as e:
