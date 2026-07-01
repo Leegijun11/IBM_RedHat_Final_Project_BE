@@ -10,6 +10,7 @@ env:
   ECR_REPOSITORY: backend-ecr
   ECS_CLUSTER: backend-cluster
   ECS_SERVICE: backend-td-service
+  TASK_DEFINITION_FAMILY: backend-td  # 태스크 정의 패밀리 이름
 
 jobs:
   deploy:
@@ -33,7 +34,7 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      # 4. Docker 이미지 빌드 및 AWS ECR로 업로드 (오타 수정 완료)
+      # 4. Docker 이미지 빌드 및 AWS ECR로 업로드
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
         env:
@@ -52,12 +53,27 @@ jobs:
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
         working-directory: ./backend
 
-      # 5. ECS 서비스 강제 업데이트
-      - name: Deploy to Amazon ECS Service
+      # 5. AWS에서 현재 활성화된 최신 태스크 정의 다운로드
+      - name: Download active task definition
         run: |
-          aws ecs update-service \
-            --cluster ${{ env.ECS_CLUSTER }} \
-            --service ${{ env.ECS_SERVICE }} \
-            --force-new-deployment
+          aws ecs describe-task-definition \
+            --task-definition ${{ env.TASK_DEFINITION_FAMILY }} \
+            --query taskDefinition > task-definition.json
 
-            
+      # 6. 다운로드한 태스크 정의 파일 내의 이미지 경로를 새로 빌드된 이미지 태그 정보로 교체
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: render-web-container
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: backend-container  # ⚠️ AWS ECS 콘솔 -> 태스크 정의에 적힌 '컨테이너 이름'과 정확히 일치해야 합니다!
+          image: ${{ steps.build-image.outputs.image }}
+
+      # 7. 수정된 새 태스크 정의를 자동으로 ECS 서비스에 배포 (새로운 버전 번호가 자동 생성됨)
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render-web-container.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true  # 배포가 완료되고 서비스가 안정화될 때까지 GitHub Actions가 기다립니다.
