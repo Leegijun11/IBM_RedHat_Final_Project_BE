@@ -106,14 +106,28 @@ class Alarm_Service:
     async def service_alarm_list(db: AsyncSession, receive_id: int):
         try:
             alarms = await Alarm_Crud.crud_alarms_list(db, receive_id=receive_id)
-            return alarms
+
+            if not alarms:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="알람 조회를 실패했습니다")
+
+            result = []
+            for alarm in alarms:
+                sender = await User_Crud.crud_users_me(db, alarm.send_id)
+                result.append({
+                    "a_id": alarm.a_id,
+                    "send_id": alarm.send_id,
+                    "sender_name": sender.u_name if sender else "알 수 없음",
+                    "receive_id": alarm.receive_id,
+                    "g_id": alarm.g_id,
+                    "a_created_at": alarm.a_created_at,
+                })
+
+            return result
+
         except HTTPException:
             raise
         except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"알람 조회 실패: {e}"
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"알람 조회 실패: {e}")
         
     # 알람 삭제
     @staticmethod
