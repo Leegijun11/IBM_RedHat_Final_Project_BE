@@ -13,6 +13,9 @@ from app.db.crud.milestones import Milestone_Crud
 
 from app.ai.llm_story import ai_llm_story_run
 
+from datetime import date
+import copy
+
 
 class Story_Service:
 
@@ -42,7 +45,7 @@ class Story_Service:
                     selected_milestones.append(m)
                 elif m.m_achieved is False and m.d_id in d_ids:
                     selected_milestones.append(m)
-            print(selected_milestones)
+            
             print(d_ids)
             total_count = len(selected_milestones)
             if total_count < 8 or total_count > 16:
@@ -54,17 +57,14 @@ class Story_Service:
             selected_diaries = []
             for milestone in selected_milestones:
                 matched_diary = next((d for d in diaries if d.d_id == milestone.d_id), None)
+                print(matched_diary.d_id)
                 if matched_diary:
-                    import copy
+                    
                     cloned_diary = copy.copy(matched_diary)
                     cloned_diary.status = "True" if milestone.m_achieved else "False"
                     cloned_diary.app_milestone = milestone.milestone.app_milestone if milestone.milestone else ""
                     selected_diaries.append(cloned_diary)
 
-            title = story.s_name if story.s_name else f'{story.start_date}~{story.end_date} 제작 동화책'
-            story_db_data = story.model_dump(exclude={"start_date", "end_date"}) | {"s_name": title}
-
-            new_story = await Story_Crud.crud_stories_create(db, story_db_data)
 
             input_list = []
             for index, diary in enumerate(selected_diaries, start=1):
@@ -75,13 +75,17 @@ class Story_Service:
                     "diary": diary.d_content
                 })
 
-            llm = await ai_llm_story_run(input_list)
+            llm, story_title = await ai_llm_story_run(input_list)
             print(f"AI가 생성한 스토리 개수({len(llm)}개)와 선택한 일기 개수({len(selected_diaries)}개)")
             if len(selected_diaries) != len(llm):
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                     detail=f"AI가 생성한 스토리 개수({len(llm)}개)와 선택한 일기 개수({len(selected_diaries)}개)가 일치하지 않습니다. 다시 시도해 주세요."
                 )
+
+            story_db_data = story.model_dump(exclude={"start_date", "end_date"}) | {"s_name": story_title}
+
+            new_story = await Story_Crud.crud_stories_create(db, story_db_data)
 
             pages_data = []
             for i, diary in enumerate(selected_diaries):
@@ -277,9 +281,9 @@ class Story_Service:
 
     # 디지털북 사용 일기 선택 목록
     @staticmethod
-    async def service_stories_diaries_select(db: AsyncSession, b_id: int):
+    async def service_stories_diaries_select(db: AsyncSession, b_id: int, start_date: date, end_date: date):
         try:
-            data = await Milestone_Crud.crud_milestones_bm_false_list(db, b_id)
+            data = await Milestone_Crud.crud_milestones_bm_false_list(db, b_id, start_date, end_date)
             if not data:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
