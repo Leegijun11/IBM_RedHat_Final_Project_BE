@@ -23,7 +23,6 @@ class BabyMilestone(Base):
     m_achieved: Mapped[bool] = mapped_column(Boolean, default=False)
     m_achieved_date: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=True)
 
-    # 관계 설정
     baby: Mapped["Baby"] = relationship("Baby", back_populates="baby_milestones")
     milestone: Mapped["Milestone"] = relationship("Milestone", back_populates="baby_milestones")
     diary : Mapped["Diary"] = relationship("Diary", back_populates="milestone")
