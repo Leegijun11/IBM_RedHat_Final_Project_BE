@@ -18,8 +18,9 @@ async def generate_daily_diaries():
         try:
             result = await db.execute(select(Baby))
             babies = result.scalars().all()
-
+            print(babies)
             for baby in babies:
+                print(baby)
                 try:
                     # 1. 일기 생성 (오늘 로그 있으면 생성, 없으면 None 반환 후 스킵)
                     new_diary = await Diary_Service.service_diaries_create_system(db, baby.b_id)
@@ -38,9 +39,10 @@ async def generate_daily_diaries():
                         )
                     )
                     parents = parent_result.scalars().all()
-
+                    print(parents)
                     # 3. 각 부모에게 diary 타입 알림 생성
                     for parent in parents:
+                        print(parent)
                         try:
                             alarm_data = Alarm_Create(
                                 send_id=None,       # 시스템 발송
@@ -67,6 +69,6 @@ async def generate_daily_diaries():
 
 
 def start_scheduler():
-    scheduler.add_job(generate_daily_diaries, "cron", hour=10, minute=30)
+    scheduler.add_job(generate_daily_diaries, "cron", hour=11, minute=20)
     scheduler.start()
     print("[scheduler] 일기 자동 생성이 시작되었습니다.")
