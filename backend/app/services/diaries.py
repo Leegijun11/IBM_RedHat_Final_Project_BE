@@ -188,7 +188,7 @@ class Diary_Service:
                     d_image = "uploads/" + d_image.split("uploads/", 1)[1]
 
             diary_data = {
-                "d_title": f"{today.strftime('%Y-%m-%d')} ai 일기",
+                "d_title": llm_result.get("d_title"),
                 "d_content": llm_result.get("d_content"),
                 "d_label": llm_result.get("d_label"),
                 "d_date": today,
