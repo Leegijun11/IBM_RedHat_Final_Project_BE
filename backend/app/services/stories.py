@@ -46,7 +46,6 @@ class Story_Service:
                 elif m.m_achieved is False and m.d_id in d_ids:
                     selected_milestones.append(m)
             
-            print(d_ids)
             total_count = len(selected_milestones)
             if total_count < 8 or total_count > 16:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
@@ -57,13 +56,14 @@ class Story_Service:
             selected_diaries = []
             for milestone in selected_milestones:
                 matched_diary = next((d for d in diaries if d.d_id == milestone.d_id), None)
-                print(matched_diary.d_id)
-                if matched_diary:
-                    
-                    cloned_diary = copy.copy(matched_diary)
-                    cloned_diary.status = "True" if milestone.m_achieved else "False"
-                    cloned_diary.app_milestone = milestone.milestone.app_milestone if milestone.milestone else ""
-                    selected_diaries.append(cloned_diary)
+                
+                if not matched_diary:
+                    raise HTTPException(status_code=400, detail="일치하는 일기가 없습니다.")
+
+                cloned_diary = copy.copy(matched_diary)
+                cloned_diary.status = "True" if milestone.m_achieved else "False"
+                cloned_diary.app_milestone = milestone.milestone.app_milestone if milestone.milestone else ""
+                selected_diaries.append(cloned_diary)
 
 
             input_list = []
@@ -76,7 +76,7 @@ class Story_Service:
                 })
 
             llm, story_title = await ai_llm_story_run(input_list)
-            print(f"AI가 생성한 스토리 개수({len(llm)}개)와 선택한 일기 개수({len(selected_diaries)}개)")
+            
             if len(selected_diaries) != len(llm):
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -104,6 +104,7 @@ class Story_Service:
             return new_story
 
         except HTTPException:
+            await db.rollback()
             raise
 
         except Exception as e:
