@@ -39,19 +39,23 @@ class Story_Service:
                     detail="해당 기간의 마일스톤 정보가 없습니다"
                 )
 
+            achieved_milestones = [m for m in milestones if m.m_achieved is True]
+            failed_milestones = [m for m in milestones if m.m_achieved is False and m.d_id in d_ids]
+
             selected_milestones = []
-            for m in milestones:
-                if m.m_achieved is True:
-                    selected_milestones.append(m)
-                elif m.m_achieved is False and m.d_id in d_ids:
-                    selected_milestones.append(m)
+            if achieved_milestones:
+                latest_achieved = max(achieved_milestones, key=lambda m: m.m_achieved_date)
+                selected_milestones.append(latest_achieved)
+
+            selected_milestones.extend(failed_milestones)
+            
             
             total_count = len(selected_milestones)
-            if total_count < 8 or total_count > 16:
+            if total_count < 2 or total_count > 6:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                                     detail=f"동화책을 만들기 위한 일기 개수가 맞지 않습니다. (현재: {total_count}개)")
             
-            selected_milestones = sorted(selected_milestones, key=lambda m: m.m_achieved_date)
+            selected_milestones = sorted(selected_milestones, key=lambda m: (m.m_achieved, m.m_achieved_date))
 
             selected_diaries = []
             for milestone in selected_milestones:
@@ -82,8 +86,10 @@ class Story_Service:
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                     detail=f"AI가 생성한 스토리 개수({len(llm)}개)와 선택한 일기 개수({len(selected_diaries)}개)가 일치하지 않습니다. 다시 시도해 주세요."
                 )
+            
+            clean_title = story_title.strip()[:40] if story_title else "행복한 성장 일기"
 
-            story_db_data = story.model_dump(exclude={"start_date", "end_date"}) | {"s_name": story_title}
+            story_db_data = story.model_dump(exclude={"start_date", "end_date"}) | {"s_name": clean_title}
 
             new_story = await Story_Crud.crud_stories_create(db, story_db_data)
 
