@@ -46,9 +46,14 @@ class Story_Service:
                 diary_milestones.setdefault(m.d_id, []).append(m)
 
             total_count = len(diary_milestones)
-            if total_count < 4 or total_count > 6:
+            if total_count != 5:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                    detail=f"동화책을 만들기 위한 마일스톤은 4~6개여야 합니다. (현재: {total_count}개)")
+                                    detail=f"동화책을 만들기 위한 일기는 5개여야 합니다. (현재: {total_count}개)")
+
+            achieved_diary_count = sum(1 for ms in diary_milestones.values() if any(m.m_achieved for m in ms))
+            if achieved_diary_count < 3:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                    detail=f"마일스톤을 달성한 일기는 최소 3개 이상이어야 합니다. (현재: {achieved_diary_count}개)")
 
             selected_diaries = []
             for d_id, ms in diary_milestones.items():
