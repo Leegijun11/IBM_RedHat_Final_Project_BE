@@ -39,31 +39,32 @@ class Story_Service:
                     detail="해당 기간의 마일스톤 정보가 없습니다"
                 )
 
-            selected_milestones = []
-            for m in milestones:
-                if m.m_achieved is True:
-                    selected_milestones.append(m)
-                elif m.m_achieved is False and m.d_id in d_ids:
-                    selected_milestones.append(m)
-            
-            total_count = len(selected_milestones)
-            if total_count < 8 or total_count > 16:
+            selected_milestones = [m for m in milestones if m.d_id in d_ids]
+
+            diary_milestones = {}
+            for m in selected_milestones:
+                diary_milestones.setdefault(m.d_id, []).append(m)
+
+            total_count = len(diary_milestones)
+            if total_count < 4 or total_count > 6:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                    detail=f"동화책을 만들기 위한 일기 개수가 맞지 않습니다. (현재: {total_count}개)")
-            
-            selected_milestones = sorted(selected_milestones, key=lambda m: m.m_achieved_date)
+                                    detail=f"동화책을 만들기 위한 마일스톤은 4~6개여야 합니다. (현재: {total_count}개)")
 
             selected_diaries = []
-            for milestone in selected_milestones:
-                matched_diary = next((d for d in diaries if d.d_id == milestone.d_id), None)
-                
+            for d_id, ms in diary_milestones.items():
+                matched_diary = next((d for d in diaries if d.d_id == d_id), None)
+
                 if not matched_diary:
                     raise HTTPException(status_code=400, detail="일치하는 일기가 없습니다.")
 
                 cloned_diary = copy.copy(matched_diary)
-                cloned_diary.status = "True" if milestone.m_achieved else "False"
-                cloned_diary.app_milestone = milestone.milestone.app_milestone if milestone.milestone else ""
+                cloned_diary.status = "True" if any(m.m_achieved for m in ms) else "False"
+                cloned_diary.app_milestone = ", ".join(
+                    m.milestone.app_milestone for m in ms if m.milestone
+                )
                 selected_diaries.append(cloned_diary)
+
+            selected_diaries.sort(key=lambda d: d.d_date)
 
 
             input_list = []
@@ -277,6 +278,18 @@ class Story_Service:
             await db.rollback()
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"책 삭제에 실패했습니다: {e}"
+            )
+
+
+    # 디지털북 - 기간 내 달성 마일스톤 일기 미리보기 (자동 포함되는 일기, 4개 제한 판단용)
+    @staticmethod
+    async def service_stories_achieved_milestones(db: AsyncSession, b_id: int, start_date: date, end_date: date):
+        try:
+            return await Milestone_Crud.crud_milestones_bm_achieved_list(db, b_id, start_date, end_date)
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"달성 마일스톤 일기를 불러오는데 실패했습니다: {e}"
             )
 
 
